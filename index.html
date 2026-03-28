@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Remix.AM Store</title>
+
+<style>
+body{margin:0;font-family:Arial;background:#0f172a;color:white}
+.navbar{display:flex;justify-content:space-between;align-items:center;padding:15px 30px;background:#111827}
+.navbar h1{color:#ef4444}
+.search{padding:8px;border-radius:8px;border:none;width:250px}
+.container{display:grid;grid-template-columns:3fr 1fr;gap:20px;padding:20px}
+.products{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px}
+.card{background:#1f2937;padding:10px;border-radius:15px;transition:.3s;box-shadow:0 0 10px rgba(0,0,0,0.5)}
+.card:hover{transform:scale(1.03);box-shadow:0 0 20px #ef4444}
+.card img{width:100%;height:180px;object-fit:cover;border-radius:10px}
+.card button{width:100%;background:#ef4444;border:none;padding:8px;margin-top:5px;color:white;border-radius:10px;cursor:pointer}
+.sidebar{background:#111827;padding:15px;border-radius:15px}
+.cart-item{background:#1f2937;padding:10px;border-radius:10px;margin-top:10px}
+.cart-item button{margin-left:5px;background:red;border:none;color:white;padding:3px 6px;border-radius:5px;cursor:pointer}
+.checkout{margin-top:20px;padding:10px;background:#1f2937;border-radius:10px}
+input{width:100%;padding:8px;margin-top:5px;border-radius:8px;border:none}
+.checkout button{margin-top:10px;width:100%;padding:10px;background:#22c55e;border:none;color:white;border-radius:10px;cursor:pointer}
+.empty{opacity:0.6;text-align:center;padding:20px}
+</style>
+</head>
+
+<body>
+
+<div class="navbar">
+  <h1>Remix.AM</h1>
+  <input class="search" placeholder="Search games..." oninput="searchItem(this.value)">
+</div>
+
+<div class="container">
+  <div class="products" id="products"></div>
+
+  <div class="sidebar">
+    <h3>Cart 🛒</h3>
+    <div id="cartItems"></div>
+    <h4>Total: $<span id="total">0</span></h4>
+
+    <div class="checkout">
+      <h4>Checkout</h4>
+      <input placeholder="Your Name" id="name">
+      <input placeholder="Card Number">
+      <button onclick="checkout()">Pay Now</button>
+    </div>
+  </div>
+</div>
+
+<h2 style="padding:20px">Coming Soon 🔥</h2>
+<div class="products" id="coming"></div>
+
+<script>
+
+// 🎮 الألعاب
+const items = [
+  {name:"GTA V", price:29.99, stock:15, img:"https://cdn.cloudflare.steamstatic.com/steam/apps/271590/header.jpg"},
+  {name:"Roblox", price:0.00, stock:15, img:"https://upload.wikimedia.org/wikipedia/commons/7/7e/Roblox_Logo_2022.jpg"},
+  {name:"Call of Duty MW2", price:69.99, stock:15, img:"https://cdn.cloudflare.steamstatic.com/steam/apps/1938090/header.jpg"},
+  {name:"Red Dead Redemption 2", price:59.99, stock:15, img:"https://cdn.cloudflare.steamstatic.com/steam/apps/1174180/header.jpg"},
+  {name:"Rocket League", price:19.99, stock:15, img:"https://cdn.cloudflare.steamstatic.com/steam/apps/252950/header.jpg"},
+  {name:"eFootball 2025", price:39.99, stock:15, img:"https://cdn.cloudflare.steamstatic.com/steam/apps/1665460/header.jpg"},
+  {
+    name:"FC 24",
+    price:69.99,
+    stock:15,
+    img:"https://cdn.cloudflare.steamstatic.com/steam/apps/2195250/header.jpg"
+  }
+];
+
+// 🔥 Coming Soon فاضي
+const comingSoon = [];
+
+let cart={}, total=0;
+
+function addToCart(name,price){
+  const item = items.find(i=>i.name===name);
+  if(item.stock <= 0){alert("Out of stock ❌"); return;}
+  item.stock--;
+  if(cart[name]) cart[name].qty++;
+  else cart[name]={price, qty:1};
+  updateCart();
+  displayItems(items);
+}
+
+function updateCart(){
+  const cartDiv=document.getElementById('cartItems');
+  cartDiv.innerHTML=""; total=0;
+
+  for(let key in cart){
+    total+=cart[key].price*cart[key].qty;
+    cartDiv.innerHTML+=`
+    <div class="cart-item">
+      ${key}<br>
+      $${cart[key].price} x ${cart[key].qty}
+    </div>`;
+  }
+
+  document.getElementById('total').innerText=total.toFixed(2);
+}
+
+function checkout(){
+  const name=document.getElementById('name').value;
+  if(!name||total===0){
+    alert("Fill name + add items");
+    return;
+  }
+  alert("Payment Successful 🎉");
+  cart={};
+  updateCart();
+}
+
+function displayItems(list){
+  const container=document.getElementById('products');
+  container.innerHTML="";
+
+  list.forEach(i=>{
+    container.innerHTML+=`
+      <div class="card">
+        <img src="${i.img}" onerror="this.src='https://via.placeholder.com/300x180?text=No+Image'">
+        <h4>${i.name}</h4>
+        <p>$${i.price.toFixed(2)}</p>
+        <p>Stock: ${i.stock}</p>
+        ${
+          i.stock > 0
+          ? `<button onclick="addToCart('${i.name}',${i.price})">Add to Cart</button>`
+          : `<button disabled style="background:gray">Out of Stock</button>`
+        }
+      </div>`;
+  });
+}
+
+function displayComing(){
+  const container=document.getElementById('coming');
+  container.innerHTML="";
+
+  if(comingSoon.length === 0){
+    container.innerHTML = `<div class="empty">No upcoming games yet 🚧</div>`;
+    return;
+  }
+
+  comingSoon.forEach(i=>{
+    container.innerHTML+=`
+      <div class="card">
+        <img src="${i.img}" onerror="this.src='https://via.placeholder.com/300x180?text=Coming+Soon'">
+        <h4>${i.name}</h4>
+        <button disabled style="background:orange">Coming Soon</button>
+      </div>`;
+  });
+}
+
+function searchItem(text){
+  const f=items.filter(i=>i.name.toLowerCase().includes(text.toLowerCase()));
+  displayItems(f);
+}
+
+displayItems(items);
+displayComing();
+
+</script>
+
+</body>
+</html>
